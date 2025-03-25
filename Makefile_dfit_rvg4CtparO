@@ -1,13 +1,14 @@
-F77     = ifort
-CC      = icc
-OPT     = -O -Bstatic
+F77     = gfortran
+CC      = gcc
+OPT     = -O -Bstatic -L./VBBinaryLensing/build -lVBBinaryLensing_static -lstdc++
+
 #OPT    = -O -i_dynamic
 #INCL    = -I/opt/intel/mpi/3.0/include
 #OPT     = -L/opt/intel/mpi/3.0/lib -lmpiif -lmpi
 #OPT    = -L/opt/intel/mpi/3.0/lib -Xlinker -rpath -lmpi -lmpiif -lmpigi -lrt -lpthread -ldl
 
-minuit_all_rvg4Ctpar.xO:  main.o minuit_94a_dblb.o fcnrvg4_Ctpar.o bilens.o critical.o microcurve_rvg4Ctpar.o hexadec_only.o geo_par.o recipes.o
-	$(F77) $(INCL) $(OPT) -o minuit_all_rvg4Ctpar.xO main.o minuit_94a_dblb.o fcnrvg4_Ctpar.o bilens.o critical.o microcurve_rvg4Ctpar.o hexadec_only.o geo_par.o recipes.o
+minuit_all_rvg4Ctpar.xO:  main.o minuit_94a_dblb.o fcnrvg4_Ctpar.o bilens.o critical.o microcurve_rvg4Ctpar.o hexadec_only.o geo_par.o recipes.o eesunhong_vbbl_interface.o
+	$(F77) $(INCL) $(OPT) -o minuit_all_rvg4Ctpar.xO main.o minuit_94a_dblb.o fcnrvg4_Ctpar.o bilens.o critical.o microcurve_rvg4Ctpar.o hexadec_only.o geo_par.o recipes.o eesunhong_vbbl_interface.o
 
 minuit_94a_dblb.o: minuit_94a_dblb.f
 	$(F77) $(INCL) $(OPT) -c minuit_94a_dblb.f
@@ -15,7 +16,7 @@ minuit_94a_dblb.o: minuit_94a_dblb.f
 main.o: main.f
 	$(F77) $(INCL) $(OPT) -c main.f
 
-fcnrvg4_Ctpar.o: fcnrvg4_Ctpar.f
+fcnrvg4_Ctpar.o: fcnrvg4_Ctpar.f eesunhong_vbbl_interface.o
 	$(F77) $(INCL) $(OPT) -c fcnrvg4_Ctpar.f
 
 bilens.o:  bilens.f
@@ -24,7 +25,7 @@ bilens.o:  bilens.f
 critical.o:  critical.f
 	$(F77) $(INCL) $(OPT) -c critical.f
 
-microcurve_rvg4Ctpar.o:  microcurve_rvg4Ctpar.f
+microcurve_rvg4Ctpar.o:  microcurve_rvg4Ctpar.f eesunhong_vbbl_interface.o
 	$(F77) $(INCL) $(OPT) -c microcurve_rvg4Ctpar.f
 
 hexadec_only.o:  hexadec_only.f
@@ -35,6 +36,9 @@ geo_par.o:  geo_par.f
 
 recipes.o:  recipes.f
 	$(F77) $(INCL) $(OPT) -c recipes.f
+
+eesunhong_vbbl_interface.o:  eesunhong_vbbl_interface.f90
+	$(F77) $(INCL) $(OPT) -c eesunhong_vbbl_interface.f90
 
 clean:
 	rm -f *.o minuit_all_rvg4Ctpar.xO

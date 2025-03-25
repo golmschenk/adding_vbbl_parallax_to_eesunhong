@@ -10,6 +10,13 @@ c
 c   Author: David P. Bennett
 c
 c------------------------------------------------------------------------------
+       use, intrinsic :: iso_c_binding, only : c_ptr
+       use eesunhong_vbbl_interface,
+     &     only : create_vbbl_coordinates_file,
+     &     set_parallax_system_for_vbbl,
+     &     create_vbbl, destroy_vbbl,
+     &     set_object_coordinates_for_vbbl,
+     &     delete_vbbl_coordinates_file
        IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 
        parameter (mmax=30,maxdata=50000,ngmax=12000000)
@@ -47,6 +54,7 @@ c------------------------------------------------------------------------------
        character*30 starname,fitname
        character*20 blank20
        character*10 parname(30)
+       type(c_ptr) :: vbbl
        common/mcmc_output/nchar_mcmc,char_mcmc
        common/seek_opt2/mcmc_file
        common/integrate/gridUstar
@@ -138,6 +146,13 @@ c ---
          else
            delta = (abs(decd) + abs(decm)/60. + abs(decs)/3600.)
          endif
+         call create_vbbl_coordinates_file(
+     &       rah, ram, ras, decd, decm, decs)
+         vbbl = create_vbbl()
+         call set_parallax_system_for_vbbl(vbbl, 1)
+         call set_object_coordinates_for_vbbl(
+     &       vbbl, 'tmp_coordinates.txt', '.')
+         call delete_vbbl_coordinates_file()
 
          write(6,*) 'enter 1 for integration grid, 0 to skip;',
      &      ' and name of optional MCMC output file'
@@ -686,7 +701,7 @@ c  --------------------
           jc = iclr(i)
           call microcurve(t,a,yfit(ii,jc),jc,nimage(i),
      &                 alpha,delta,Ein_R,xcc,lon_obs(jc),lat_obs(jc),0,
-     &                 brgrid,bphigrid,ngr,nphimax,sxg,syg,ssx,ssy)
+     &                 brgrid,bphigrid,ngr,nphimax,sxg,syg,ssx,ssy,vbbl)
           maximages=max(maximages,nimage(i))
  300   continue
 c      nchar_mcmc = # of fit parameters + 1 for chi2
@@ -797,8 +812,8 @@ c      nchar_mcmc = # of fit parameters + 1 for chi2
          if(A0(1)+A2(1).ne.0.)
      &        write(6,561) A0(1),A0sig(1),A2(1),A2sig(1)
          do 415 i=2,nnclr
-           if(A0(i)+A2(i).ne.0.) 
-     &       write(6,562) sfx(i),A0(i),A0sig(i),sfx(i),A2(i),A2sig(i)      
+           if(A0(i)+A2(i).ne.0.)
+     &       write(6,562) sfx(i),A0(i),A0sig(i),sfx(i),A2(i),A2sig(i)
  415     continue
 
  559     format('Normalization parameters with pseudo-errors follow:')
@@ -981,7 +996,7 @@ c        ------------------------
              if(A0(j).ne.0.) then
                call microcurve(t,a,yfits(j),j,nn,
      &                 alpha,delta,Ein_R,xcc,lon_obs(j),lat_obs(j),0,
-     &                 brgrid,bphigrid,ngr,nphimax,sxg,syg,ssx,ssy)
+     &                 brgrid,bphigrid,ngr,nphimax,sxg,syg,ssx,ssy,vbbl)
 ccc               call microcurve(t,a,yfits(j),cfits(j),j,nn,alpha,delta,-9.,
 ccc     &                       zalph,zgamm)
                yyfits(j)=A0(j)*yfits(j)+A2(j)

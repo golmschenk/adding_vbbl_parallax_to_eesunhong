@@ -2,7 +2,8 @@ c==============================================================================
 
        subroutine microcurve(t,a,yfit,iclr,nimage,alpha,delta,
      &                       Ein_R,xcc,flon_obs,flat_obs,icheck,
-     &                       brgrid,bphigrid,ngr,nphimax,sxg,syg,sx,sy)
+     &                       brgrid,bphigrid,ngr,nphimax,sxg,syg,sx,
+     &                       sy,vbbl)
 
 c
 c   Author: David P. Bennett
@@ -51,7 +52,12 @@ c                 call sourceloc(newcall,sep,eps1,bx,by,sxe,sye)
 c                 call sourceloc(newcall,sep,eps1,bx,by,sxe,sye)
 c       call sourceloc(n,sep,eps1,bx,by,sx,sy)
 c------------------------------------------------------------------------------
+       use, intrinsic :: iso_c_binding, only : c_ptr
+       use eesunhong_vbbl_interface,
+     &     only : compute_parallax_for_vbbl
+
        IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+       type(c_ptr), intent(in) :: vbbl
 ccc       parameter(ncpts=16000,ndark=20000,nllmax=200,ngxmx=800,ngymx=200)
 ccc       parameter(ncpts=16000,ndark=20000,nllmax=200)
        parameter(ncpts=108000,ndark=5000,nllmax=200)
@@ -74,6 +80,7 @@ ccc       double precision bgridmax(2),bgridmin(2),dd(0:3)
      &                  fampn(-nbgridmax:nbgridmax)
        double precision a(30)
        double precision z(2,5),ampim(5),zr(5),zphi(5)
+       real(kind=8) :: et(2)
        integer icrhead(nllmax,nllmax),nxtcr(ncpts)
        integer icahead(ncaxgrid,ncaygrid),nxtca(ncpts)
        double precision ca_zr(ncpts),ca_zphi(ncpts)
@@ -160,7 +167,7 @@ c    a(9) = Rstar = stellar radius in days
 c    a(10)= t_fix (not a fit parameter)
 c    a(11)= piEx
 c    a(12)= piEy
-c    
+c
        eps1 = a(6)
        eps2 = 1.d0-eps1
        w=twopi*a(7)
@@ -201,7 +208,10 @@ ccc         if(isep0.eq.1) sep0=sep
 
 c      call Andy Gould's Parallax code
 c      -------------------------------
-       call geo_par(qn,qe,t,alpha,delta,tfix)
+!      call geo_par(qn,qe,t,alpha,delta,tfix)
+       call compute_parallax_for_vbbl(vbbl, t, tfix, et)
+       qn = et(1)
+       qe = et(2)
 
        if(flon_obs.eq.0.d0.and.flat_obs.eq.0.d0) then
          qtn = 0.d0
